@@ -48,6 +48,23 @@ STEP_2_GUIDE = (
     "((안녕하세요 + (닉네임) 입니다.)"
 )
 
+STEP_3_COMPLETE = (
+    "🥀 {인증 완료} 🗝️\n\n"
+    "- 관리자가 전달하는 닉으로 변경\n"
+    "- 프본 (본인사진)으로 프사 변경\n"
+    "- 완료 후 관리자 태그 후 완료 통보\n\n"
+    "관리자에게 확인을 받은 후 안내를 따라주세요.\n\n"
+    "• 프사에 꼭 얼굴이 나오지 않아도 됩니다.\n"
+    "• Ai 사진은 금지합니다.\n"
+    "• 도용은 즉시 강퇴입니다."
+)
+
+MANUAL_AUTH_REPLIES = {
+    "1)": STEP_1_FORM,
+    "2)": STEP_2_GUIDE,
+    "3)": STEP_3_COMPLETE,
+}
+
 TENDENCY_MAP = {
     "돔": "𝒮",
     "섭": "ℳ",
@@ -94,7 +111,6 @@ def is_completed_step1_form(text: str) -> bool:
         matched_line = next((line for line in lines if line.startswith(prefix)), None)
         if not matched_line or "-" not in matched_line:
             return False
-        # '-' 뒤에 실제 작성된 값이 있는지 확인
         value = matched_line.split("-", 1)[1].strip()
         if not value:
             return False
@@ -140,6 +156,11 @@ def handle_member_joined(event):
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     user_text = event.message.text.strip()
+
+    # 수동 명령어 1), 2), 3) 처리
+    if user_text in MANUAL_AUTH_REPLIES:
+        reply_text(event.reply_token, MANUAL_AUTH_REPLIES[user_text])
+        return
 
     # 1) 양식을 작성해서 붙여넣으면 자동으로 2) 성별 인증 안내 발송
     if is_completed_step1_form(user_text):
