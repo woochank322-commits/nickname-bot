@@ -29,7 +29,6 @@ app = Flask(__name__)
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
-# 성향 -> 기호 매핑
 TENDENCY_MAP = {
     "돔": "𝒮",
     "섭": "ℳ",
@@ -37,27 +36,12 @@ TENDENCY_MAP = {
     "바닐라": "𝒱",
 }
 
-# 성별 -> 이모티콘 매핑
 GENDER_MAP = {
     "남": "🕰️",
     "여": "🥀",
 }
 
-# 일반 숫자 -> 위첨자 작은 숫자 변환 테이블
 SUPERSCRIPT_MAP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
-
-HELP_MESSAGE = (
-    "🥀 {닉네임 생성 안내} 🗝️\n\n"
-    "아래 형식에 맞춰 띄어쓰기로 입력해주세요.\n"
-    "형식 : 닉네임(2글자) 성별(남/여) 나이 성향\n\n"
-    "• 예시 : 레오 남 20 돔\n"
-    "• 결과 : 𝒮 · 레오²⁰🕰️\n\n"
-    "📌 성향 기호 안내\n"
-    "• 돔 : 𝒮\n"
-    "• 섭 : ℳ\n"
-    "• 스위치 : 𝒮𝒲\n"
-    "• 바닐라 : 𝒱"
-)
 
 
 def to_superscript(age_str: str) -> str:
@@ -65,7 +49,6 @@ def to_superscript(age_str: str) -> str:
 
 
 def is_valid_two_char_nickname(nickname: str) -> bool:
-    """초성(ㄱ-ㅎ)이나 모음(ㅏ-ㅣ) 단독이 아닌 완성형 한글/영문/숫자 2글자 검증"""
     return bool(re.match(r"^[가-힣a-zA-Z0-9]{2}$", nickname))
 
 
@@ -109,22 +92,15 @@ def callback():
 def handle_message(event):
     user_text = event.message.text.strip()
 
-    # 도움말 명령어
-    if user_text in ("/닉네임", "!닉네임", "닉네임양식"):
-        reply_text(event.reply_token, HELP_MESSAGE)
-        return
-
     parts = user_text.split()
     if len(parts) != 4:
         return
 
     nickname, gender, age, tendency = parts
 
-    # 성별, 나이(숫자 1~3자리), 성향이 모두 유효한 패턴일 때만 처리
     if gender not in GENDER_MAP or not age.isdigit() or tendency not in TENDENCY_MAP:
         return
 
-    # 닉네임이 2글자가 아닐 경우 안내 메시지 출력
     if not is_valid_two_char_nickname(nickname):
         reply_text(
             event.reply_token,
